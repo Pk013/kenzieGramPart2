@@ -1,36 +1,41 @@
 const express = require("express");
-const multer = require("multer");
-const fs = require("fs")
+const fs = require('fs');
+const multer = require('multer');
+const uploadsPath = './public/uploads';
 
-const publicPath = "public/";
-const uploadPath = "public/uploads/"
+
 const port = 3000;
+
+
 const app = express();
-const upload = multer({ dest: uploadPath })
+app.use(express.static('./public'));
 
-app.use(express.static(publicPath));
-app.set("view engine", "pug")
+const storage = multer.diskStorage({
+    destination: './public/uploads',
 
-const uploadedFiles = [];
+});
 
-app.get('/', function (req, res) {
-  const path = './public/uploads';
-  fs.readdir(path, function (err, items) {
-    res.render('index', { title: 'Kenziegram gettin Pug', message: 'Welcome to Kenziegram With all the pugs', array: items })
-  })
-})
 
-function putUpDatPicture(imgNames) {
-  let outputString = "";
-  for (let i = 0; i < imgNames.length; i++) {
-    const name = imgNames[i];
-    outputString += `<img src="uploads/${name}"/>`
-  }
-  return outputString;
-}
-app.post('/uploads', upload.single('myFile'), function (request, response, next) {
-  uploadedFiles.push(request.file.filename);
-  response.render('uploads', { title: 'Uploaded Picture With Pugs', message: 'Congratulations you got pugged', image: request.file.filename });
-})
+const path = './public/uploads';
 
-app.listen(port, () => console.log("Server running on " + port))
+
+
+const upload = multer({
+    storage: storage,
+
+});
+
+app.set('view engine', 'pug');
+app.get('/', (req, res) => {
+    fs.readdir(uploadsPath, function(err, items) {
+        const itemPaths = items.map(item => `uploads/${item}`);
+        res.render('index', { title: 'KenzieGram', h1: 'Welcome to Kenziegram', images: itemPaths });
+    });
+});
+
+app.post('/uploads/', upload.single('myImage'), (req, res) => {
+    res.render('upload', { title: 'Upload', h1: 'file uploaded', imagePath: `uploads/${req.file.filename}` });
+});
+
+
+app.listen(port, function() { console.log("I am working") });
